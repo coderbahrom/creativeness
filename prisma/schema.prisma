@@ -1,0 +1,157 @@
+// Ertak Bog'i — ma'lumotlar modeli
+// Torrance 4 mezoni bo'yicha kreativlikni baholash uchun MVP sxemasi.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Classroom {
+  id        String    @id @default(cuid())
+  name      String
+  grade     Int // 1..4
+  createdAt DateTime  @default(now())
+  students  Student[]
+}
+
+model Student {
+  id          String     @id @default(cuid())
+  firstName   String
+  lastInitial String // Familiyaning faqat birinchi harfi (12-bo'lim: to'liq ism ishlatilmaydi)
+  classroom   Classroom  @relation(fields: [classroomId], references: [id])
+  classroomId String
+  createdAt   DateTime   @default(now())
+  sessions    Session[]
+  responses   Response[]
+
+  @@index([classroomId])
+}
+
+model Story {
+  id        String                  @id @default(cuid())
+  slug      String                  @unique
+  title     String
+  gradeMin  Int
+  gradeMax  Int
+  summary   String
+  body      String // Paragraflar \n\n bilan ajratilgan
+  tasks     Task[]
+  questions ComprehensionQuestion[]
+  sessions  Session[]
+}
+
+model ComprehensionQuestion {
+  id           String @id @default(cuid())
+  story        Story  @relation(fields: [storyId], references: [id])
+  storyId      String
+  order        Int
+  prompt       String
+  options      String // JSON massiv
+  correctIndex Int
+
+  @@index([storyId])
+}
+
+model Task {
+  id      String @id @default(cuid())
+  story   Story  @relation(fields: [storyId], references: [id])
+  storyId String
+  order   Int
+  // davom_ettirish | almashtirish | boshqa_koz | agar | boyitish | muqobil_yakun | yangi_personaj | muammo_yechish
+  type      String
+  prompt    String
+  // fluency | flexibility | originality | elaboration
+  criterion String
+  responses Response[]
+
+  @@index([storyId])
+}
+
+model Session {
+  id         String     @id @default(cuid())
+  student    Student    @relation(fields: [studentId], references: [id])
+  studentId  String
+  story      Story      @relation(fields: [storyId], references: [id])
+  storyId    String
+  stage      String     @default("kirish") // kirish | oqish | tushunish | yaratish | bog | yakun
+  startedAt  DateTime   @default(now())
+  finishedAt DateTime?
+  reflection String?
+  responses  Response[]
+
+  @@index([studentId])
+  @@index([storyId])
+}
+
+model Response {
+  id          String   @id @default(cuid())
+  session     Session  @relation(fields: [sessionId], references: [id])
+  sessionId   String
+  task        Task     @relation(fields: [taskId], references: [id])
+  taskId      String
+  student     Student  @relation(fields: [studentId], references: [id])
+  studentId   String
+  rawText     String
+  inputMethod String   @default("matn") // ovoz | matn | rasm
+  // AI savolidan keyingi kengaytirilgan javob (bitta sessiyada maks 3 savol)
+  followUpOf  String?
+  createdAt   DateTime @default(now())
+
+  ideas      Idea[]
+  assessment Assessment?
+
+  @@index([sessionId])
+  @@index([taskId])
+  @@index([studentId])
+}
+
+model Idea {
+  id         String   @id @default(cuid())
+  response   Response @relation(fields: [responseId], references: [id], onDelete: Cascade)
+  responseId String
+  order      Int
+  text       String
+  // personaj | makon | voqea | his | sabab | oqibat | vaqt | obyekt
+  category String
+  // Originallikni sinf ichida sanash uchun normallashtirilgan kalit
+  canonicalKey     String
+  elaborationCount Int    @default(0)
+  elaborationKinds String @default("[]") // JSON massiv: sifatlash, sabab, his, tasvir, dialog, oqibat, o'xshatish
+
+  @@index([responseId])
+  @@index([canonicalKey])
+}
+
+model Assessment {
+  id         String   @id @default(cuid())
+  response   Response @relation(fields: [responseId], references: [id], onDelete: Cascade)
+  responseId String   @unique
+
+  // 4 darajali shkala: 1..4 (4.3-bo'lim). Aniq raqam emas, daraja.
+  fluency     Int
+  flexibility Int
+  originality Int
+  elaboration Int
+
+  // Xom o'lchovlar — o'qituvchiga tushuntirish uchun
+  ideaCount       Int
+  categoryCount   Int
+  detailCount     Int
+  rarityScore     Float  @default(0) // 0..1, sinf ichidagi kamyoblik
+  originalityBase String @default("sinf") // sinf | platforma
+
+  aiQuestion    String?
+  aiRationale   String?
+  safetyFlagged Boolean @default(false)
+  safetyNote    String?
+
+  teacherEdited Boolean  @default(false)
+  teacherNote   String?
+  model         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
