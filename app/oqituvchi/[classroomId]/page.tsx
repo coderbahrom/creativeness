@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AppHeader } from "@/components/AppHeader";
 import { LevelChip } from "@/components/LevelChip";
 import { prisma } from "@/lib/db";
 import { CALIBRATION, CRITERION_HINTS, CRITERION_LABELS, clampGrade } from "@/lib/torrance";
@@ -65,7 +66,9 @@ export default async function ClassroomMap({
   const silent = rows.filter((row) => row.responseCount === 0);
 
   return (
-    <main className="mx-auto max-w-5xl px-5 py-12">
+    <>
+      <AppHeader />
+      <main className="mx-auto max-w-5xl px-5 py-10">
       <Link href="/oqituvchi" className="text-sm text-[var(--ink-soft)] hover:underline">
         ← Sinflar
       </Link>
@@ -136,6 +139,7 @@ export default async function ClassroomMap({
           bolalar nutqini 100% aniq tahlil qila olmaydi.
         </p>
       </section>
-    </main>
+      </main>
+    </>
   );
 }

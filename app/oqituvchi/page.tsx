@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AppHeader } from "@/components/AppHeader";
 import { prisma } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -12,8 +13,10 @@ export default async function TeacherHome() {
   const flagged = await prisma.assessment.count({ where: { safetyFlagged: true } });
 
   return (
-    <main className="mx-auto max-w-3xl px-5 py-12">
-      <h1 className="text-2xl font-extrabold">O&apos;qituvchi paneli</h1>
+    <>
+      <AppHeader />
+      <main className="mx-auto max-w-3xl px-5 py-10">
+      <h1 className="text-3xl font-extrabold">O&apos;qituvchi paneli</h1>
       <p className="mt-2 text-[var(--ink-soft)]">
         Sinf xaritasi 4 mezon bo&apos;yicha darajalarni ko&apos;rsatadi. Har bir bahoni
         o&apos;zgartirish mumkin.
@@ -40,6 +43,7 @@ export default async function TeacherHome() {
           </li>
         ))}
       </ul>
-    </main>
+      </main>
+    </>
   );
 }

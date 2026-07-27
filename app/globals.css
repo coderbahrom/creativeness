@@ -1,96 +1,413 @@
 @import "tailwindcss";
 
-:root {
-  /* Bog' palitrasi: iliq qog'oz, tuproq, barg */
-  --paper: #f6f2e8;
-  --paper-raised: #fffdf7;
-  --ink: #2c2a24;
-  --ink-soft: #6d675a;
-  --line: #e0d8c6;
-  --bark: #8a5b4b;
-  --leaf: #6f9152;
-  --leaf-deep: #4c6b39;
-  --bloom: #d98a68;
-  --sky: #cfe3e8;
-  --warn: #b4636f;
+/*
+ * ERTAK BOG'I — dizayn tizimi
+ *
+ * Ikki sahna, bitta til:
+ *   [data-scene="kun"] — o'qish va tanlash. Yorug', tinch, matn uchun.
+ *   [data-scene="bog"] — yaratish va daraxt. Qorong'i bog', bolaning ishi yorishib turadi.
+ *
+ * Sahna almashishi bezak emas: bola ertakdan chiqib o'z bog'iga kiradi.
+ * Token nomlari ikkala sahnada bir xil — komponentlar sahnani bilmaydi.
+ */
+
+:root,
+[data-scene="kun"] {
+  color-scheme: light;
+
+  --bg: oklch(0.968 0.014 168);
+  --bg-far: oklch(0.94 0.022 172);
+  --surface: oklch(0.995 0.005 168);
+  --surface-sunk: oklch(0.955 0.016 168);
+  --ink: oklch(0.26 0.03 175);
+  --ink-soft: oklch(0.44 0.028 175);
+  --line: oklch(0.9 0.022 168);
+  --line-strong: oklch(0.8 0.035 168);
+
+  --leaf: oklch(0.62 0.13 148);
+  --leaf-deep: oklch(0.44 0.12 150);
+  --bark: oklch(0.42 0.055 55);
+  --bark-light: oklch(0.55 0.06 58);
+  --bloom: oklch(0.66 0.16 38);
+  --bloom-heart: oklch(0.83 0.13 88);
+  --sun: oklch(0.86 0.13 88);
+  --warn: oklch(0.5 0.15 22);
+  --sky-top: oklch(0.93 0.035 220);
+  --sky-bottom: oklch(0.97 0.02 150);
+  --soil: oklch(0.72 0.05 120);
+
+  --btn-ink: oklch(0.99 0.01 150);
+  --btn-bg: var(--leaf-deep);
+
+  --glow: 0 0 0 rgb(0 0 0 / 0);
+  --shadow-card: 0 1px 2px oklch(0.4 0.05 170 / 0.06), 0 8px 24px oklch(0.4 0.05 170 / 0.06);
+  --shadow-lift: 0 2px 4px oklch(0.4 0.05 170 / 0.08), 0 14px 32px oklch(0.4 0.05 170 / 0.12);
+
+  /* Baho darajalari (4→1). Past daraja jazo emas, e'tibor signali —
+     shuning uchun qizil emas, yumshoq marjon rangi. */
+  --level-4-bg: oklch(0.44 0.12 150);
+  --level-4-ink: oklch(0.99 0.01 150);
+  --level-3-bg: oklch(0.85 0.09 148);
+  --level-3-ink: oklch(0.3 0.06 150);
+  --level-2-bg: oklch(0.88 0.09 85);
+  --level-2-ink: oklch(0.35 0.07 60);
+  --level-1-bg: oklch(0.87 0.07 20);
+  --level-1-ink: oklch(0.38 0.11 22);
+
+  /* Moslashuvchanlik toifalari — 45° oralig'ida 8 ta ajratilgan rang */
+  --cat-his: oklch(0.55 0.16 15);
+  --cat-voqea: oklch(0.6 0.13 60);
+  --cat-obyekt: oklch(0.55 0.14 105);
+  --cat-personaj: oklch(0.52 0.14 150);
+  --cat-oqibat: oklch(0.55 0.11 195);
+  --cat-makon: oklch(0.52 0.14 240);
+  --cat-sabab: oklch(0.5 0.16 285);
+  --cat-vaqt: oklch(0.54 0.16 330);
+}
+
+[data-scene="bog"] {
+  color-scheme: dark;
+
+  --bg: oklch(0.23 0.048 182);
+  --bg-far: oklch(0.19 0.045 190);
+  --surface: oklch(0.3 0.045 184);
+  --surface-sunk: oklch(0.26 0.045 184);
+  --ink: oklch(0.96 0.02 150);
+  --ink-soft: oklch(0.79 0.03 160);
+  --line: oklch(0.4 0.05 180);
+  --line-strong: oklch(0.52 0.06 178);
+
+  --leaf: oklch(0.72 0.15 148);
+  --leaf-deep: oklch(0.6 0.15 150);
+  --bark: oklch(0.42 0.05 50);
+  --bark-light: oklch(0.52 0.055 55);
+  --bloom: oklch(0.76 0.15 40);
+  --bloom-heart: oklch(0.9 0.14 92);
+  /* Oqshomda bu quyosh emas, oy — rangi deyarli yo'q */
+  --sun: oklch(0.93 0.035 240);
+  --warn: oklch(0.72 0.14 25);
+  --sky-top: oklch(0.19 0.05 262);
+  --sky-bottom: oklch(0.34 0.06 205);
+  --soil: oklch(0.32 0.04 120);
+
+  --btn-ink: oklch(0.21 0.05 160);
+  --btn-bg: oklch(0.82 0.16 150);
+
+  --glow: 0 0 32px oklch(0.8 0.16 150 / 0.28);
+  --shadow-card: 0 1px 2px oklch(0.1 0.04 190 / 0.5), 0 10px 30px oklch(0.1 0.04 190 / 0.45);
+  --shadow-lift: 0 2px 6px oklch(0.1 0.04 190 / 0.55), 0 18px 40px oklch(0.1 0.04 190 / 0.5);
+
+  --cat-his: oklch(0.75 0.16 15);
+  --cat-voqea: oklch(0.82 0.15 70);
+  --cat-obyekt: oklch(0.79 0.16 108);
+  --cat-personaj: oklch(0.76 0.17 150);
+  --cat-oqibat: oklch(0.78 0.12 195);
+  --cat-makon: oklch(0.74 0.14 240);
+  --cat-sabab: oklch(0.72 0.16 288);
+  --cat-vaqt: oklch(0.76 0.16 332);
 }
 
 @theme inline {
-  --color-paper: var(--paper);
-  --color-paper-raised: var(--paper-raised);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-sunk: var(--surface-sunk);
   --color-ink: var(--ink);
   --color-ink-soft: var(--ink-soft);
   --color-line: var(--line);
-  --color-bark: var(--bark);
   --color-leaf: var(--leaf);
   --color-leaf-deep: var(--leaf-deep);
+  --color-bark: var(--bark);
   --color-bloom: var(--bloom);
-  --color-sky: var(--sky);
+  --color-sun: var(--sun);
   --color-warn: var(--warn);
   --font-sans: var(--font-nunito);
+  --font-story: var(--font-literata);
+
+  /* Qatlamlar — o'zboshimcha 999 yo'q */
+  --z-base: 0;
+  --z-rail: 10;
+  --z-header: 20;
+  --z-overlay: 30;
+  --z-toast: 40;
+}
+
+:root {
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-soft: cubic-bezier(0.33, 0.7, 0.3, 1);
+  --dur-fast: 160ms;
+  --dur-base: 240ms;
+  --dur-scene: 620ms;
+}
+
+/* Eski token nomlari — o'qituvchi paneli hali shularni ishlatadi */
+:root,
+[data-scene] {
+  --paper: var(--bg);
+  --paper-raised: var(--surface);
+  --sky: var(--sky-bottom);
+}
+
+html {
+  background: var(--bg);
 }
 
 body {
-  background: var(--paper);
+  background: var(--bg);
   color: var(--ink);
   font-family: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
+  transition:
+    background-color var(--dur-scene) var(--ease-soft),
+    color var(--dur-scene) var(--ease-soft);
 }
 
-/* Bolalar ekrani: yirik, tinch, kam element */
+[data-scene] {
+  background: var(--bg);
+  color: var(--ink);
+  transition:
+    background-color var(--dur-scene) var(--ease-soft),
+    color var(--dur-scene) var(--ease-soft);
+}
+
+::selection {
+  background: var(--leaf);
+  color: var(--btn-ink);
+}
+
+/* Bolaning matni: yirik, tinch, o'qishga qulay */
 .kid-text {
-  font-size: 1.25rem;
-  line-height: 1.9;
+  font-size: 1.2rem;
+  line-height: 1.75;
+  text-wrap: pretty;
+}
+
+.story-text {
+  font-family: var(--font-literata), Georgia, serif;
+  font-size: 1.18rem;
+  line-height: 1.85;
+  max-width: 62ch;
+  text-wrap: pretty;
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
 }
 
 .card {
-  background: var(--paper-raised);
+  background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 1rem;
+  border-radius: 1.25rem;
+  box-shadow: var(--shadow-card);
 }
 
 .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   border-radius: 999px;
-  padding: 0.75rem 1.5rem;
-  font-weight: 700;
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  padding: 0.8rem 1.6rem;
+  font-weight: 800;
+  font-size: 1rem;
+  line-height: 1.2;
+  cursor: pointer;
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
 }
 
-.btn:active {
-  transform: translateY(1px);
+.btn:focus-visible {
+  outline: 3px solid var(--leaf);
+  outline-offset: 3px;
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
 }
 
 .btn-primary {
-  background: var(--leaf-deep);
-  color: #fff;
+  background: var(--btn-bg);
+  color: var(--btn-ink);
+  box-shadow: var(--shadow-card);
 }
 
-.btn-primary:hover {
-  box-shadow: 0 6px 16px rgb(76 107 57 / 0.28);
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lift), var(--glow);
+}
+
+.btn-primary:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .btn-quiet {
   background: transparent;
-  border: 1px solid var(--line);
+  border: 1.5px solid var(--line-strong);
   color: var(--ink);
 }
 
-@keyframes grow-in {
+.btn-quiet:hover:not(:disabled) {
+  border-color: var(--leaf);
+  background: color-mix(in oklab, var(--leaf) 10%, transparent);
+}
+
+.btn-quiet[aria-pressed="true"] {
+  background: var(--btn-bg);
+  border-color: var(--btn-bg);
+  color: var(--btn-ink);
+}
+
+.field {
+  background: var(--surface);
+  border: 1.5px solid var(--line-strong);
+  border-radius: 1.25rem;
+  color: var(--ink);
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
+}
+
+.field::placeholder {
+  color: var(--ink-soft);
+  opacity: 1;
+}
+
+.field:focus {
+  outline: none;
+  border-color: var(--leaf);
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--leaf) 22%, transparent);
+}
+
+/* Sahna almashuvi: ertakdan bog'ga o'tish */
+@keyframes scene-in {
   from {
     opacity: 0;
-    transform: scale(0.6);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
-    transform: scale(1);
+    transform: none;
   }
 }
 
-.grow-in {
-  animation: grow-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+.scene-in {
+  animation: scene-in var(--dur-scene) var(--ease-out) both;
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.rise-in {
+  animation: rise-in 420ms var(--ease-out) both;
+}
+
+/* Daraxt: shox o'sishi, gul ochilishi, shabada */
+@keyframes sprout {
+  from {
+    opacity: 0;
+    transform: scale(0.06) rotate(-6deg);
+  }
+  60% {
+    opacity: 1;
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes bloom-open {
+  from {
+    opacity: 0;
+    transform: scale(0.1) rotate(-40deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes sway {
+  0%,
+  100% {
+    transform: rotate(-0.55deg);
+  }
+  50% {
+    transform: rotate(0.55deg);
+  }
+}
+
+@keyframes drift {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.7);
+  }
+  20% {
+    opacity: 0.9;
+  }
+  80% {
+    opacity: 0.7;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx, 12px), -46px) scale(1.1);
+  }
+}
+
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+}
+
+.sprout {
+  animation: sprout 900ms var(--ease-out) both;
+}
+
+.bloom-open {
+  animation: bloom-open 720ms var(--ease-out) both;
+}
+
+.sway {
+  animation: sway 7s ease-in-out infinite alternate;
+}
+
+.drift {
+  animation: drift 5.5s linear infinite;
+}
+
+.pulse-soft {
+  animation: pulse-soft 2.8s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .grow-in {
-    animation: none;
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    transform: none;
   }
 }

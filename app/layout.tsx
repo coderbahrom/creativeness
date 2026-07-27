@@ -1,10 +1,20 @@
 import type { Metadata } from "next";
-import { Nunito } from "next/font/google";
+import { Nunito, Literata } from "next/font/google";
 import "./globals.css";
 
+// Interfeys ovozi: yumaloq, bolaga yaqin grotesk.
 const nunito = Nunito({
   variable: "--font-nunito",
   subsets: ["latin", "cyrillic"],
+  display: "swap",
+});
+
+// Ertak ovozi: o'quv kitobi serifi. Ikki ovoz qarama-qarshi o'qda turadi —
+// bola matnni o'qiyaptimi yoki interfeys bilan ishlayaptimi, shundan bilinadi.
+const literata = Literata({
+  variable: "--font-literata",
+  subsets: ["latin", "cyrillic"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -16,7 +26,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="uz">
-      <body className={`${nunito.variable} antialiased`}>{children}</body>
+      <body className={`${nunito.variable} ${literata.variable} antialiased`}>{children}</body>
     </html>
   );
 }

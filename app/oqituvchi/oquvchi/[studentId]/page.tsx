@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AppHeader } from "@/components/AppHeader";
 import { AssessmentEditor } from "@/components/AssessmentEditor";
 import { LevelChip } from "@/components/LevelChip";
 import { prisma } from "@/lib/db";
@@ -47,7 +48,9 @@ export default async function StudentProfile({
     .slice(0, 3);
 
   return (
-    <main className="mx-auto max-w-3xl px-5 py-12">
+    <>
+      <AppHeader />
+      <main className="mx-auto max-w-3xl px-5 py-10">
       <Link
         href={`/oqituvchi/${student.classroomId}`}
         className="text-sm text-[var(--ink-soft)] hover:underline"
@@ -83,7 +86,10 @@ export default async function StudentProfile({
           <h2 className="font-bold">Eng yaxshi javoblari</h2>
           <ul className="mt-3 space-y-3">
             {best.map((response) => (
-              <li key={response.id} className="border-l-2 border-[var(--leaf)] pl-3">
+              <li
+                key={response.id}
+                className="rounded-xl bg-[var(--surface-sunk)] p-4"
+              >
                 <p className="text-sm text-[var(--ink-soft)]">{response.task.prompt}</p>
                 <p className="mt-1">{response.rawText}</p>
               </li>
@@ -178,6 +184,7 @@ export default async function StudentProfile({
           <p className="text-[var(--ink-soft)]">Hali javob yo&apos;q.</p>
         )}
       </div>
-    </main>
+      </main>
+    </>
   );
 }

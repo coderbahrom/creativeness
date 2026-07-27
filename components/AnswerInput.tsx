@@ -100,14 +100,21 @@ export function AnswerInput({
   return (
     <div className="space-y-3">
       {preferVoice && (
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <button
             type="button"
             onClick={toggleListening}
             disabled={busy || !voiceSupported}
-            className={`btn ${listening ? "bg-[var(--warn)] text-white" : "btn-quiet"} disabled:opacity-40`}
+            aria-pressed={listening}
+            className={`btn ${listening ? "bg-[var(--warn)] text-[var(--btn-ink)]" : "btn-quiet"}`}
           >
-            {listening ? "⏹ To'xtatish" : "🎙 Gapirib berish"}
+            <span
+              aria-hidden="true"
+              className={`inline-block h-2.5 w-2.5 rounded-full ${
+                listening ? "pulse-soft bg-[var(--btn-ink)]" : "bg-[var(--warn)]"
+              }`}
+            />
+            {listening ? "To'xtatish" : "Gapirib berish"}
           </button>
           <span className="text-sm text-[var(--ink-soft)]">
             {listening
@@ -125,10 +132,14 @@ export function AnswerInput({
         placeholder={placeholder}
         disabled={busy}
         rows={5}
-        className="kid-text card w-full resize-y p-4 outline-none focus:border-[var(--leaf-deep)] disabled:opacity-60"
+        className="kid-text field w-full resize-y p-4 disabled:opacity-60"
       />
 
-      {error && <p className="text-sm text-[var(--warn)]">{error}</p>}
+      {error && (
+        <p role="alert" className="text-[var(--warn)]">
+          {error}
+        </p>
+      )}
 
       {preferVoice && value && (
         <p className="text-sm text-[var(--ink-soft)]">
@@ -141,8 +152,14 @@ export function AnswerInput({
         type="button"
         onClick={onSubmit}
         disabled={busy || value.trim().length < 2}
-        className="btn btn-primary disabled:opacity-40"
+        className="btn btn-primary"
       >
+        {busy && (
+          <span
+            aria-hidden="true"
+            className="pulse-soft inline-block h-2.5 w-2.5 rounded-full bg-[var(--btn-ink)]"
+          />
+        )}
         {busy ? "O'ylayapman..." : submitLabel}
       </button>
     </div>

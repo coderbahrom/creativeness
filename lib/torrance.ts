@@ -46,16 +46,20 @@ export const CATEGORY_LABELS: Record<IdeaCategory, string> = {
   obyekt: "Ob'ekt",
 };
 
-/** Daraxt vizualida har bir toifaga alohida shox rangi (3.2-bo'lim). */
+/**
+ * Daraxt vizualida har bir toifaga alohida shox rangi (3.2-bo'lim).
+ * Qiymatlar globals.css da sahna bo'yicha (kun/bog') qayta belgilanadi —
+ * shuning uchun bu yerda o'zgaruvchiga havola turadi, aniq rang emas.
+ */
 export const CATEGORY_COLORS: Record<IdeaCategory, string> = {
-  personaj: "#7c9a4b",
-  makon: "#4b8a9a",
-  voqea: "#9a7c4b",
-  his: "#b4636f",
-  sabab: "#6f5b9a",
-  oqibat: "#4b9a6f",
-  vaqt: "#9a934b",
-  obyekt: "#8a5b4b",
+  personaj: "var(--cat-personaj)",
+  makon: "var(--cat-makon)",
+  voqea: "var(--cat-voqea)",
+  his: "var(--cat-his)",
+  sabab: "var(--cat-sabab)",
+  oqibat: "var(--cat-oqibat)",
+  vaqt: "var(--cat-vaqt)",
+  obyekt: "var(--cat-obyekt)",
 };
 
 export const ELABORATION_KINDS = [

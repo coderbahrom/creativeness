@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db";
+import { AppHeader } from "@/components/AppHeader";
 import { StartLesson } from "@/components/StartLesson";
 
 export const dynamic = "force-dynamic";
@@ -13,29 +14,32 @@ export default async function DarsPage() {
   ]);
 
   return (
-    <main className="mx-auto max-w-3xl px-5 py-12">
-      <h1 className="text-2xl font-extrabold">Darsni boshlash</h1>
-      <p className="mt-2 text-[var(--ink-soft)]">
-        Sinf, o&apos;quvchi va ertakni tanlang. Tayyorgarlik shart emas.
-      </p>
-      <StartLesson
-        classrooms={classrooms.map((classroom) => ({
-          id: classroom.id,
-          name: classroom.name,
-          grade: classroom.grade,
-          students: classroom.students.map((student) => ({
-            id: student.id,
-            name: `${student.firstName} ${student.lastInitial}.`,
-          })),
-        }))}
-        stories={stories.map((story) => ({
-          id: story.id,
-          title: story.title,
-          gradeMin: story.gradeMin,
-          gradeMax: story.gradeMax,
-          summary: story.summary,
-        }))}
-      />
-    </main>
+    <>
+      <AppHeader />
+      <main className="mx-auto max-w-3xl px-5 py-10">
+        <h1 className="text-3xl font-extrabold">Darsni boshlash</h1>
+        <p className="mt-2 mb-8 text-[var(--ink-soft)]">
+          Sinf, o&apos;quvchi va ertakni tanlang. Tayyorgarlik shart emas.
+        </p>
+        <StartLesson
+          classrooms={classrooms.map((classroom) => ({
+            id: classroom.id,
+            name: classroom.name,
+            grade: classroom.grade,
+            students: classroom.students.map((student) => ({
+              id: student.id,
+              name: `${student.firstName} ${student.lastInitial}.`,
+            })),
+          }))}
+          stories={stories.map((story) => ({
+            id: story.id,
+            title: story.title,
+            gradeMin: story.gradeMin,
+            gradeMax: story.gradeMax,
+            summary: story.summary,
+          }))}
+        />
+      </main>
+    </>
   );
 }

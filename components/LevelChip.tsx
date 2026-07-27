@@ -2,10 +2,10 @@ import { LEVEL_LABELS, LEVEL_MEANINGS } from "@/lib/torrance";
 
 /** Daraja rangi: past — jazo emas, e'tibor signali. */
 const LEVEL_STYLES: Record<number, string> = {
-  4: "bg-[#4c6b39] text-white",
-  3: "bg-[#a8c48a] text-[#243018]",
-  2: "bg-[#f0dcae] text-[#5b4a20]",
-  1: "bg-[#e9c3c3] text-[#6b2b2b]",
+  4: "bg-[var(--level-4-bg)] text-[var(--level-4-ink)]",
+  3: "bg-[var(--level-3-bg)] text-[var(--level-3-ink)]",
+  2: "bg-[var(--level-2-bg)] text-[var(--level-2-ink)]",
+  1: "bg-[var(--level-1-bg)] text-[var(--level-1-ink)]",
   0: "bg-[var(--line)] text-[var(--ink-soft)]",
 };
 

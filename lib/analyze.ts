@@ -241,6 +241,41 @@ function dedupe(ideas: AnalyzedIdea[]): AnalyzedIdea[] {
  * Zaxira rejim: ANTHROPIC_API_KEY yo'q yoki so'rov muvaffaqiyatsiz bo'lganda.
  * Bu — taxminiy o'lchov; o'qituvchi panelida "AI tahlilisiz" deb belgilanadi.
  */
+/**
+ * Toifani kalit so'z bo'yicha taxmin qilish. Bu semantik tahlil emas — birinchi
+ * mos kelgan toifa olinadi, mos kelmasa "voqea". Faqat zaxira rejim uchun:
+ * o'qituvchi panelida bunday baho "AI tahlilisiz" deb belgilanadi.
+ */
+const CATEGORY_MARKERS: [IdeaCategory, RegExp][] = [
+  [
+    "his",
+    /\b(qo'rq|xursand|xafa|sevin|yig'la|kul(di|ib)|uyat|achin|hayron|g'amgin|quvon|sog'in)/i,
+  ],
+  ["sabab", /\b(chunki|shuning uchun|sababli|negaki)/i],
+  ["oqibat", /\b(natijada|oqibat|shundan keyin|oxiri|shu bois)/i],
+  ["vaqt", /\b(ertalab|kechqurun|kech(a|da)?|tun(da)?|qish|yoz|bahor|kuz|birdan|so'ng)\b/i],
+  [
+    "makon",
+    /\b(uy|kulba|o'rmon|tog'|yo'l|bog'|qishloq|daryo|osmon|dala|shahar|g'or|hovli)/i,
+  ],
+  [
+    "obyekt",
+    /\b(xat|non|choy|kosa|eshik|deraza|chiroq|tayoq|to'qmoq|qop|arqon|kalit|sovg'a)/i,
+  ],
+  [
+    "personaj",
+    /\b(bo'ri|ho'kiz|eshak|xo'roz|it\b|quyon|tulki|chol|kampir|bola|qiz|o'g'il|sichqon|ayiq|mushuk|turna|bulut)/i,
+  ],
+];
+
+/** Ochuvchi savollar (7.3-bo'lim). Bular namuna javob emas — faqat savol. */
+const FALLBACK_QUESTIONS: Record<Criterion, string> = {
+  fluency: "Yana nima bo'lishi mumkin edi?",
+  flexibility: "Bu safar boshqa tomondan o'ylab ko'rsak-chi?",
+  elaboration: "Buni menga ko'rsatib ber — u yerda nima ko'rinyapti?",
+  originality: "Hech kim o'ylamagan narsa nima bo'lardi?",
+};
+
 export function heuristicAnalysis(input: AnalyzeInput): Analysis {
   const sentences = input.answer
     .split(/(?<=[.!?…])\s+|\n+/)
@@ -256,9 +291,10 @@ export function heuristicAnalysis(input: AnalyzeInput): Analysis {
     if (!key || seen.has(key)) continue;
     seen.add(key);
     const matches = sentence.match(new RegExp(detailMarkers, "gi")) ?? [];
+    const category = CATEGORY_MARKERS.find(([, re]) => re.test(sentence))?.[0] ?? "voqea";
     ideas.push({
       text: sentence,
-      category: "voqea",
+      category,
       canonical_key: key,
       elaboration_count: matches.length,
       elaboration_kinds: matches.length ? ["sifatlash"] : [],
@@ -269,7 +305,7 @@ export function heuristicAnalysis(input: AnalyzeInput): Analysis {
     ideas,
     discarded: [],
     weakest_criterion: input.taskCriterion,
-    question: "",
+    question: ideas.length ? FALLBACK_QUESTIONS[input.taskCriterion] : "",
     safety: { flagged: false, note: "" },
     rationale:
       "AI tahlili ishlamadi — gaplar bo'yicha taxminiy ajratish qo'llanildi. O'qituvchi tekshiruvi zarur.",
