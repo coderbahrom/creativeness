@@ -25,6 +25,10 @@ export default async function KirishPage({
           <Link href="/dars" className="font-bold text-[var(--leaf-deep)] hover:underline">
             darsga parolsiz kiradi
           </Link>
+          . Birinchi marta ishlatyapsizmi —{" "}
+          <Link href="/qollanma" className="font-bold text-[var(--leaf-deep)] hover:underline">
+            qo&apos;llanmani o&apos;qing
+          </Link>
           .
         </p>
 

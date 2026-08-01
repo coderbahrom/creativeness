@@ -32,6 +32,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             >
               O&apos;qituvchi paneli
             </Link>
+            <Link
+              href="/qollanma"
+              className="rounded-full px-3 py-1.5 text-[var(--ink-soft)] hover:bg-[var(--surface-sunk)] hover:text-[var(--ink)]"
+            >
+              Qo&apos;llanma
+            </Link>
           </nav>
           <form action={logout} className="ml-auto">
             <button type="submit" className="btn btn-quiet px-4 py-1.5 text-sm">
