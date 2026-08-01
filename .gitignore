@@ -53,3 +53,6 @@ next-env.d.ts
 /.windsurf
 /.claude/skills
 /skills-lock.json
+
+# Yuklangan PDF asl nusxalari — bolalar kontenti repoga kirmaydi
+/public/uploads

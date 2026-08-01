@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { logout } from "@/app/kirish/actions";
 import { AppHeader } from "@/components/AppHeader";
 import { prisma } from "@/lib/db";
 
@@ -16,7 +17,14 @@ export default async function TeacherHome() {
     <>
       <AppHeader />
       <main className="mx-auto max-w-3xl px-5 py-10">
-      <h1 className="text-3xl font-extrabold">O&apos;qituvchi paneli</h1>
+      <div className="flex flex-wrap items-center gap-4">
+        <h1 className="text-3xl font-extrabold">O&apos;qituvchi paneli</h1>
+        <form action={logout} className="ml-auto">
+          <button type="submit" className="btn btn-quiet px-4 py-1.5 text-sm">
+            Chiqish
+          </button>
+        </form>
+      </div>
       <p className="mt-2 text-[var(--ink-soft)]">
         Sinf xaritasi 4 mezon bo&apos;yicha darajalarni ko&apos;rsatadi. Har bir bahoni
         o&apos;zgartirish mumkin.

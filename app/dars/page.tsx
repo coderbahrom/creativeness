@@ -10,7 +10,8 @@ export default async function DarsPage() {
       orderBy: { grade: "asc" },
       include: { students: { orderBy: { firstName: "asc" } } },
     }),
-    prisma.story.findMany({ orderBy: { gradeMin: "asc" } }),
+    // O'quvchi faqat admin e'lon qilgan ertaklarni ko'radi
+    prisma.story.findMany({ where: { published: true }, orderBy: { gradeMin: "asc" } }),
   ]);
 
   return (

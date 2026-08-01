@@ -1,5 +1,7 @@
+import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { SESSION_COOKIE, roleAllows, verifyToken } from "@/lib/auth";
 
 /**
  * O'qituvchi har qanday bahoni bir bosishda o'zgartira oladi (9.5-bo'lim).
@@ -7,6 +9,13 @@ import { prisma } from "@/lib/db";
  * O'zgartirilgan baho keyingi avtomatik qayta hisoblashlarda saqlanib qoladi.
  */
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  // Baho tahriri — faqat o'qituvchi/admin. O'quvchi oqimi bu yo'lni ishlatmaydi.
+  const jar = await cookies();
+  const role = await verifyToken(jar.get(SESSION_COOKIE)?.value);
+  if (!roleAllows(role, "oqituvchi")) {
+    return NextResponse.json({ error: "Ruxsat yo'q" }, { status: 401 });
+  }
+
   const { id } = await params;
   const body = (await request.json()) as {
     fluency?: number;

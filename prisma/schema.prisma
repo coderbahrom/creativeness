@@ -39,6 +39,11 @@ model Story {
   gradeMax  Int
   summary   String
   body      String // Paragraflar \n\n bilan ajratilgan
+  // Admin e'lon qilmaguncha o'quvchiga ko'rinmaydi
+  published Boolean                 @default(true)
+  // Asl PDF nusxasi (ixtiyoriy) — public/uploads ichidagi yo'l
+  pdfPath   String?
+  createdAt DateTime                @default(now())
   tasks     Task[]
   questions ComprehensionQuestion[]
   sessions  Session[]
