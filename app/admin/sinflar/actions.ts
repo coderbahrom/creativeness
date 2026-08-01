@@ -24,14 +24,28 @@ export async function addClassroom(formData: FormData) {
   revalidatePath("/admin/sinflar");
 }
 
+/**
+ * O'quvchini barcha izlari bilan o'chirish: javoblar (g'oyalar va baholar
+ * kaskad bilan ketadi), sessiyalar, so'ng o'quvchining o'zi.
+ * Bu 12-bo'limdagi "ma'lumotni o'chirishni talab qilish" huquqining ham asosi.
+ */
+async function purgeStudent(tx: Parameters<Parameters<typeof prisma.$transaction>[0]>[0], studentId: string) {
+  await tx.response.deleteMany({ where: { studentId } });
+  await tx.session.deleteMany({ where: { studentId } });
+  await tx.student.delete({ where: { id: studentId } });
+}
+
 export async function deleteClassroom(formData: FormData) {
   await requireAdmin();
   const id = String(formData.get("id") ?? "");
-  const students = await prisma.student.count({ where: { classroomId: id } });
-  // O'quvchisi bor sinf o'chirilmaydi — bolalar ma'lumoti bexosdan yo'qolmasin
-  if (students > 0) return;
-  await prisma.classroom.delete({ where: { id } });
+  const students = await prisma.student.findMany({ where: { classroomId: id } });
+  // Kaskadli o'chirish — UI da tasdiqlash dialogi bor
+  await prisma.$transaction(async (tx) => {
+    for (const student of students) await purgeStudent(tx, student.id);
+    await tx.classroom.delete({ where: { id } });
+  });
   revalidatePath("/admin/sinflar");
+  revalidatePath("/oqituvchi");
 }
 
 export async function addStudent(formData: FormData) {
@@ -51,11 +65,9 @@ export async function addStudent(formData: FormData) {
 export async function deleteStudent(formData: FormData) {
   await requireAdmin();
   const id = String(formData.get("id") ?? "");
-  const responses = await prisma.response.count({ where: { studentId: id } });
-  // Javoblari bor o'quvchini o'chirish — ma'lumotni o'chirish talabi bilan
-  // birga hal qilinadi (12-bo'lim, 7-band). Hozircha bloklaymiz.
-  if (responses > 0) return;
-  await prisma.session.deleteMany({ where: { studentId: id } });
-  await prisma.student.delete({ where: { id } });
+  await prisma.$transaction(async (tx) => {
+    await purgeStudent(tx, id);
+  });
   revalidatePath("/admin/sinflar");
+  revalidatePath("/oqituvchi");
 }

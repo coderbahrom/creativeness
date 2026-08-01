@@ -1,3 +1,4 @@
+import { ConfirmSubmit } from "@/components/ConfirmSubmit";
 import { prisma } from "@/lib/db";
 import { addClassroom, addStudent, deleteClassroom, deleteStudent } from "./actions";
 
@@ -18,8 +19,9 @@ export default async function SinflarPage() {
     <>
       <h1 className="text-3xl font-extrabold">Sinflar va o&apos;quvchilar</h1>
       <p className="mt-2 text-[var(--ink-soft)]">
-        O&apos;quvchining faqat ismi va familiya bosh harfi saqlanadi. Javobi bor
-        o&apos;quvchi va o&apos;quvchisi bor sinf o&apos;chirilmaydi.
+        O&apos;quvchining faqat ismi va familiya bosh harfi saqlanadi. O&apos;chirish —
+        qaytarilmaydi: o&apos;quvchi bilan birga uning barcha javoblari va baholari ham
+        o&apos;chadi.
       </p>
 
       <form action={addClassroom} className="card mt-8 flex flex-wrap items-end gap-3 p-5">
@@ -61,14 +63,15 @@ export default async function SinflarPage() {
               <span className="text-sm text-[var(--ink-soft)]">
                 {classroom.grade}-sinf normasi · {classroom.students.length} o&apos;quvchi
               </span>
-              {classroom.students.length === 0 && (
-                <form action={deleteClassroom} className="ml-auto">
-                  <input type="hidden" name="id" value={classroom.id} />
-                  <button type="submit" className="text-sm font-bold text-[var(--warn)] hover:underline">
-                    Sinfni o&apos;chirish
-                  </button>
-                </form>
-              )}
+              <form action={deleteClassroom} className="ml-auto">
+                <input type="hidden" name="id" value={classroom.id} />
+                <ConfirmSubmit
+                  message={`"${classroom.name}" sinfini o'chirasizmi? ${classroom.students.length} ta o'quvchi va ularning BARCHA javoblari qaytarib bo'lmas tarzda o'chadi.`}
+                  className="text-sm font-bold text-[var(--warn)] hover:underline"
+                >
+                  Sinfni o&apos;chirish
+                </ConfirmSubmit>
+              </form>
             </div>
 
             <ul className="mt-4 flex flex-wrap gap-2">
@@ -81,18 +84,20 @@ export default async function SinflarPage() {
                     {student.firstName} {student.lastInitial}.
                   </span>
                   <span className="text-[var(--ink-soft)]">{student._count.responses} javob</span>
-                  {student._count.responses === 0 && (
-                    <form action={deleteStudent}>
-                      <input type="hidden" name="id" value={student.id} />
-                      <button
-                        type="submit"
-                        aria-label={`${student.firstName} ni o'chirish`}
-                        className="flex h-5 w-5 items-center justify-center rounded-full font-bold text-[var(--warn)] hover:bg-[color-mix(in_oklab,var(--warn)_15%,transparent)]"
-                      >
-                        ×
-                      </button>
-                    </form>
-                  )}
+                  <form action={deleteStudent}>
+                    <input type="hidden" name="id" value={student.id} />
+                    <ConfirmSubmit
+                      ariaLabel={`${student.firstName} ni o'chirish`}
+                      message={`${student.firstName} ${student.lastInitial}. ni o'chirasizmi?${
+                        student._count.responses > 0
+                          ? ` ${student._count.responses} ta javobi va baholari ham qaytarib bo'lmas tarzda o'chadi.`
+                          : ""
+                      }`}
+                      className="flex h-5 w-5 items-center justify-center rounded-full font-bold text-[var(--warn)] hover:bg-[color-mix(in_oklab,var(--warn)_15%,transparent)]"
+                    >
+                      ×
+                    </ConfirmSubmit>
+                  </form>
                 </li>
               ))}
               {classroom.students.length === 0 && (

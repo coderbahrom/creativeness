@@ -190,7 +190,8 @@ export async function analyzeResponse(input: AnalyzeInput): Promise<Analysis> {
       ],
       output_config: {
         // Tahlil arzon bo'lishi kerak (11-bo'lim): oddiy sanash/toifalash uchun past effort yetarli.
-        effort: "low",
+        // Haiku effort parametrini qo'llamaydi — faqat qo'llaydigan modellarga yuboriladi.
+        ...(ANALYSIS_MODEL.includes("haiku") ? {} : { effort: "low" as const }),
         format: { type: "json_schema", schema: OUTPUT_SCHEMA as unknown as Record<string, unknown> },
       },
       messages: [{ role: "user", content: userContent }],
