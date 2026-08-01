@@ -97,6 +97,14 @@ export default function Home() {
             kamyoblik asosida hisoblanadi.
           </p>
         </section>
+
+        <footer className="mt-10 border-t border-[var(--line)] pt-5 text-sm text-[var(--ink-soft)]">
+          <p>
+            <strong className="text-[var(--ink)]">Naima.CreativRead</strong> — kreativ
+            o&apos;qishni Torrance mezonlari bilan o&apos;lchash metodikasi. Ertak Bog&apos;i —
+            shu metodikaning amaliy platformasi.
+          </p>
+        </footer>
       </main>
     </>
   );

@@ -20,7 +20,7 @@ const literata = Literata({
 export const metadata: Metadata = {
   title: "Ertak Bog'i",
   description:
-    "Boshlang'ich sinflar uchun kreativ o'qish platformasi — Torrance 4 mezoni bo'yicha baholash bilan",
+    "Naima.CreativRead metodikasining amaliy platformasi: boshlang'ich sinflar uchun kreativ o'qish, Torrance 4 mezoni bo'yicha baholash bilan",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
