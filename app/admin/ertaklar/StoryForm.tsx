@@ -1,3 +1,4 @@
+import { PdfUpload } from "@/components/PdfUpload";
 import { TASK_TYPES, type TaskType } from "@/lib/torrance";
 import { saveStory } from "./actions";
 
@@ -85,27 +86,18 @@ export function StoryForm({ story, xato }: { story: StoryFormData; xato?: string
           </label>
           <textarea id="body" name="body" rows={12} defaultValue={story.body} className="field w-full p-3 font-[var(--font-literata)]" />
         </div>
-        <div className="flex flex-wrap items-center gap-5">
-          <div>
-            <label htmlFor="pdf" className="mb-1 block text-sm font-bold text-[var(--ink-soft)]">
-              PDF asl nusxa (ixtiyoriy)
-            </label>
-            <input id="pdf" name="pdf" type="file" accept="application/pdf" className="text-sm" />
-            <p className="mt-1 text-xs text-[var(--ink-soft)]">
-              Matn maydoni bo&apos;sh bo&apos;lsa, PDFdan avtomatik olishga harakat qilinadi —
-              keyin tekshirib tuzating.
-            </p>
-          </div>
-          {story.pdfPath && (
-            <a href={story.pdfPath} target="_blank" className="font-bold text-[var(--leaf-deep)] hover:underline">
-              Joriy PDFni ochish ↗
-            </a>
-          )}
-          <label className="ml-auto flex cursor-pointer items-center gap-2 font-bold">
-            <input type="checkbox" name="published" defaultChecked={story.published ?? true} className="h-4 w-4" />
-            E&apos;lon qilingan
-          </label>
+        <div>
+          <p className="mb-2 text-sm font-bold text-[var(--ink-soft)]">PDF asl nusxa</p>
+          <PdfUpload currentPath={story.pdfPath} />
         </div>
+
+        <label className="flex w-fit cursor-pointer items-center gap-2 font-bold">
+          <input type="checkbox" name="published" defaultChecked={story.published ?? true} className="h-4 w-4" />
+          E&apos;lon qilingan
+          <span className="font-normal text-[var(--ink-soft)]">
+            — belgilanmasa, o&apos;quvchi bu ertakni ko&apos;rmaydi
+          </span>
+        </label>
       </section>
 
       <section className="card space-y-5 p-5">
