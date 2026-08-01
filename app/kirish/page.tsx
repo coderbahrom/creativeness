@@ -40,10 +40,7 @@ export default async function KirishPage({
                   ["admin", "Admin"],
                 ] as const
               ).map(([value, label]) => (
-                <label
-                  key={value}
-                  className="btn btn-quiet cursor-pointer has-[:checked]:border-[var(--btn-bg)] has-[:checked]:bg-[var(--btn-bg)] has-[:checked]:text-[var(--btn-ink)]"
-                >
+                <label key={value} className="pill-choice cursor-pointer">
                   <input
                     type="radio"
                     name="rol"
@@ -51,7 +48,7 @@ export default async function KirishPage({
                     defaultChecked={role === value}
                     className="sr-only"
                   />
-                  {label}
+                  <span className="btn btn-quiet">{label}</span>
                 </label>
               ))}
             </div>

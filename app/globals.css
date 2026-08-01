@@ -261,6 +261,19 @@ h3 {
   color: var(--btn-ink);
 }
 
+/* Radio-tanlov ko'ylagi: yashirin input + ko'rinadigan .btn.
+   :has() o'rniga qo'shni selektor — radio guruhlarda barcha brauzerlarda barqaror. */
+.pill-choice input:checked + .btn {
+  background: var(--btn-bg);
+  border-color: var(--btn-bg);
+  color: var(--btn-ink);
+}
+
+.pill-choice input:focus-visible + .btn {
+  outline: 3px solid var(--leaf);
+  outline-offset: 3px;
+}
+
 .field {
   background: var(--surface);
   border: 1.5px solid var(--line-strong);
