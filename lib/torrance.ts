@@ -16,6 +16,14 @@ export const CRITERION_LABELS: Record<Criterion, string> = {
   elaboration: "Batafsillik",
 };
 
+/** Tor joylar uchun (jadval sarlavhasi, kartochka ostidagi yorliq) */
+export const CRITERION_SHORT: Record<Criterion, string> = {
+  fluency: "Ravonlik",
+  flexibility: "Moslash.",
+  originality: "Original.",
+  elaboration: "Batafsil.",
+};
+
 export const CRITERION_HINTS: Record<Criterion, string> = {
   fluency: "Nechta ishlaydigan g'oya ishlab chiqarildi",
   flexibility: "G'oyalar necha xil toifaga tegishli",

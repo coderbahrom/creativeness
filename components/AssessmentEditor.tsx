@@ -2,15 +2,15 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { CRITERION_LABELS, LEVEL_LABELS } from "@/lib/torrance";
+import { CRITERION_HINTS, CRITERION_LABELS, LEVEL_LABELS, LEVEL_MEANINGS } from "@/lib/torrance";
 
 const CRITERIA = ["fluency", "flexibility", "originality", "elaboration"] as const;
 type Levels = Record<(typeof CRITERIA)[number], number>;
 
 /**
  * O'qituvchi har qanday bahoni bir bosishda o'zgartira oladi (9.5-bo'lim).
- * O'zgartirish eslab qolinadi va keyingi avtomatik qayta hisoblashlar
- * bu bahoga tegmaydi.
+ * Shuning uchun ro'yxat emas, 1–4 tugmalari: bitta bosish = bitta o'zgarish.
+ * O'zgartirish eslab qolinadi va avtomatik qayta hisoblash unga tegmaydi.
  */
 export function AssessmentEditor({
   assessmentId,
@@ -28,69 +28,124 @@ export function AssessmentEditor({
   const router = useRouter();
   const [levels, setLevels] = useState<Levels>(initial);
   const [note, setNote] = useState(initialNote ?? "");
-  const [state, setState] = useState<"idle" | "saving" | "saved">("idle");
+  const [state, setState] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
   async function save(next: Partial<Levels & { teacherNote: string; safetyResolved: boolean }>) {
     setState("saving");
-    await fetch(`/api/assessments/${assessmentId}`, {
-      method: "PATCH",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(next),
-    });
-    setState("saved");
-    router.refresh();
+    try {
+      const res = await fetch(`/api/assessments/${assessmentId}`, {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(next),
+      });
+      if (!res.ok) throw new Error(String(res.status));
+      setState("saved");
+      router.refresh();
+    } catch {
+      setState("error");
+    }
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-baseline gap-x-3">
+        <p className="text-sm font-bold text-[var(--ink-soft)]">Bahoni o&apos;zgartirish</p>
+        <p
+          role="status"
+          className={`text-sm ${
+            state === "error" ? "font-bold text-[var(--warn)]" : "text-[var(--ink-soft)]"
+          }`}
+        >
+          {state === "saving"
+            ? "Saqlanyapti…"
+            : state === "saved"
+              ? "Saqlandi"
+              : state === "error"
+                ? "Saqlanmadi — qayta urinib ko'ring"
+                : edited
+                  ? "Siz tahrirlagansiz"
+                  : "AI bahosi"}
+        </p>
+      </div>
+
       <div className="grid gap-3 sm:grid-cols-2">
         {CRITERIA.map((criterion) => (
-          <label key={criterion} className="flex items-center justify-between gap-3 text-sm">
-            <span className="text-[var(--ink-soft)]">{CRITERION_LABELS[criterion]}</span>
-            <select
-              value={levels[criterion]}
-              onChange={(event) => {
-                const value = Number(event.target.value);
-                setLevels({ ...levels, [criterion]: value });
-                void save({ [criterion]: value } as Partial<Levels>);
-              }}
-              className="card px-2 py-1"
+          <div key={criterion}>
+            <p
+              className="mb-1.5 text-sm font-bold text-[var(--ink-soft)]"
+              title={CRITERION_HINTS[criterion]}
             >
-              {[4, 3, 2, 1].map((level) => (
-                <option key={level} value={level}>
-                  {level} — {LEVEL_LABELS[level]}
-                </option>
-              ))}
-            </select>
-          </label>
+              {CRITERION_LABELS[criterion]}
+            </p>
+            <div
+              role="radiogroup"
+              aria-label={CRITERION_LABELS[criterion]}
+              className="flex gap-1.5"
+            >
+              {[1, 2, 3, 4].map((level) => {
+                const on = levels[criterion] === level;
+                return (
+                  <button
+                    key={level}
+                    type="button"
+                    role="radio"
+                    aria-checked={on}
+                    title={`${LEVEL_LABELS[level]} — ${LEVEL_MEANINGS[level]}`}
+                    onClick={() => {
+                      if (on) return;
+                      setLevels({ ...levels, [criterion]: level });
+                      void save({ [criterion]: level } as Partial<Levels>);
+                    }}
+                    className={`h-9 flex-1 rounded-lg text-sm font-extrabold transition ${
+                      on
+                        ? ""
+                        : "border border-[var(--line-strong)] text-[var(--ink-soft)] hover:border-[var(--leaf)] hover:text-[var(--ink)]"
+                    }`}
+                    style={
+                      on
+                        ? {
+                            background: `var(--level-${level}-bg)`,
+                            color: `var(--level-${level}-ink)`,
+                          }
+                        : undefined
+                    }
+                  >
+                    {level}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         ))}
       </div>
 
-      <textarea
-        value={note}
-        onChange={(event) => setNote(event.target.value)}
-        onBlur={() => note !== (initialNote ?? "") && save({ teacherNote: note })}
-        rows={2}
-        placeholder="O'qituvchi izohi (ota-onaga ko'rsatish uchun)"
-        className="card w-full p-3 text-sm outline-none focus:border-[var(--leaf-deep)]"
-      />
-
-      <div className="flex items-center gap-3 text-sm">
-        {flagged && (
-          <button className="btn btn-quiet text-sm" onClick={() => save({ safetyResolved: true })}>
-            Ko&apos;rib chiqildi
-          </button>
-        )}
-        <span className="text-[var(--ink-soft)]">
-          {state === "saving"
-            ? "Saqlanyapti..."
-            : state === "saved"
-              ? "Saqlandi"
-              : edited
-                ? "Siz tahrirlagansiz"
-                : "AI bahosi"}
-        </span>
+      <div>
+        <label
+          htmlFor={`izoh-${assessmentId}`}
+          className="mb-1.5 block text-sm font-bold text-[var(--ink-soft)]"
+        >
+          Izoh (ota-onaga ko&apos;rsatish uchun)
+        </label>
+        <textarea
+          id={`izoh-${assessmentId}`}
+          value={note}
+          onChange={(event) => setNote(event.target.value)}
+          onBlur={() => note !== (initialNote ?? "") && save({ teacherNote: note })}
+          rows={2}
+          placeholder="Masalan: g'oyalari ko'p, lekin tafsilot qo'shishga undash kerak"
+          className="field w-full p-3 text-sm"
+        />
       </div>
+
+      {flagged && (
+        <button
+          type="button"
+          className="btn btn-quiet px-4 py-2 text-sm"
+          onClick={() => save({ safetyResolved: true })}
+        >
+          Ko&apos;rib chiqildi — belgini olib tashlash
+        </button>
+      )}
     </div>
   );
 }
