@@ -24,6 +24,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     elaboration?: number;
     teacherNote?: string;
     safetyResolved?: boolean;
+    /** Bahoni o'zgartirmasdan tasdiqlash — moslik ko'rsatkichi uchun (15-bo'lim) */
+    confirm?: boolean;
   };
 
   const level = (value: number | undefined) =>
@@ -39,6 +41,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       teacherNote: body.teacherNote,
       safetyFlagged: body.safetyResolved ? false : undefined,
       teacherEdited: true,
+      editedAt: new Date(),
     },
   });
 

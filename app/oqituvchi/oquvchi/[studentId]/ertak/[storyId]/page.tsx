@@ -222,8 +222,25 @@ export default async function StudentStoryPage({
                                   originality: assessment.originality,
                                   elaboration: assessment.elaboration,
                                 }}
+                                ai={
+                                  assessment.aiFluency === null
+                                    ? null
+                                    : {
+                                        fluency: assessment.aiFluency,
+                                        flexibility: assessment.aiFlexibility ?? undefined,
+                                        originality: assessment.aiOriginality ?? undefined,
+                                        elaboration: assessment.aiElaboration ?? undefined,
+                                      }
+                                }
                                 initialNote={assessment.teacherNote}
-                                edited={assessment.teacherEdited}
+                                edited={
+                                  assessment.aiFluency !== null &&
+                                  (assessment.aiFluency !== assessment.fluency ||
+                                    assessment.aiFlexibility !== assessment.flexibility ||
+                                    assessment.aiOriginality !== assessment.originality ||
+                                    assessment.aiElaboration !== assessment.elaboration)
+                                }
+                                reviewed={assessment.editedAt !== null}
                                 flagged={assessment.safetyFlagged}
                               />
                             </div>

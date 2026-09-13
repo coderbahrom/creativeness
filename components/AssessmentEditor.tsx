@@ -15,22 +15,31 @@ type Levels = Record<(typeof CRITERIA)[number], number>;
 export function AssessmentEditor({
   assessmentId,
   initial,
+  ai,
   initialNote,
   edited,
+  reviewed,
   flagged,
 }: {
   assessmentId: string;
   initial: Levels;
+  /** AI qo'ygan asl baho — o'zgarmaydi. Eski yozuvlarda bo'lmasligi mumkin. */
+  ai: Partial<Levels> | null;
   initialNote: string | null;
   edited: boolean;
+  /** O'qituvchi ko'rib chiqqanmi (tasdiqlagan yoki o'zgartirgan) */
+  reviewed: boolean;
   flagged: boolean;
 }) {
   const router = useRouter();
   const [levels, setLevels] = useState<Levels>(initial);
   const [note, setNote] = useState(initialNote ?? "");
   const [state, setState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const aiLevel = (criterion: (typeof CRITERIA)[number]) => ai?.[criterion];
 
-  async function save(next: Partial<Levels & { teacherNote: string; safetyResolved: boolean }>) {
+  async function save(
+    next: Partial<Levels & { teacherNote: string; safetyResolved: boolean; confirm: boolean }>,
+  ) {
     setState("saving");
     try {
       const res = await fetch(`/api/assessments/${assessmentId}`, {
@@ -64,7 +73,9 @@ export function AssessmentEditor({
                 ? "Saqlanmadi — qayta urinib ko'ring"
                 : edited
                   ? "Siz tahrirlagansiz"
-                  : "AI bahosi"}
+                  : reviewed
+                    ? "Siz tasdiqlagansiz"
+                    : "AI bahosi — hali ko'rib chiqilmagan"}
         </p>
       </div>
 
@@ -82,6 +93,7 @@ export function AssessmentEditor({
               aria-label={CRITERION_LABELS[criterion]}
               className="flex gap-1.5"
             >
+              {/* AI tanlovi tugma ostidagi nuqta bilan belgilanadi */}
               {[1, 2, 3, 4].map((level) => {
                 const on = levels[criterion] === level;
                 return (
@@ -115,6 +127,11 @@ export function AssessmentEditor({
                 );
               })}
             </div>
+            {aiLevel(criterion) !== undefined && aiLevel(criterion) !== levels[criterion] && (
+              <p className="mt-1 text-xs text-[var(--ink-soft)]">
+                AI bahosi: <strong>{aiLevel(criterion)}</strong> — siz o&apos;zgartirdingiz
+              </p>
+            )}
           </div>
         ))}
       </div>
@@ -137,15 +154,26 @@ export function AssessmentEditor({
         />
       </div>
 
-      {flagged && (
-        <button
-          type="button"
-          className="btn btn-quiet px-4 py-2 text-sm"
-          onClick={() => save({ safetyResolved: true })}
-        >
-          Ko&apos;rib chiqildi — belgini olib tashlash
-        </button>
-      )}
+      <div className="flex flex-wrap gap-3">
+        {!reviewed && !flagged && (
+          <button
+            type="button"
+            className="btn btn-quiet px-4 py-2 text-sm"
+            onClick={() => save({ confirm: true })}
+          >
+            Baho to&apos;g&apos;ri — tasdiqlayman
+          </button>
+        )}
+        {flagged && (
+          <button
+            type="button"
+            className="btn btn-quiet px-4 py-2 text-sm"
+            onClick={() => save({ safetyResolved: true })}
+          >
+            Ko&apos;rib chiqildi — belgini olib tashlash
+          </button>
+        )}
+      </div>
     </div>
   );
 }

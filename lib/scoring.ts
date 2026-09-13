@@ -143,6 +143,8 @@ export async function recomputeTaskOriginality(taskId: string): Promise<number> 
         rarityScore: rarity,
         originalityBase: base,
         originality: levelFromRarity(rarity, peerCount),
+        // Bu tizimning qayta hisobi, o'qituvchi tahriri emas — nusxa ham yangilanadi
+        aiOriginality: levelFromRarity(rarity, peerCount),
       },
     });
     updated++;

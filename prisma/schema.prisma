@@ -149,12 +149,21 @@ model Assessment {
   rarityScore     Float  @default(0) // 0..1, sinf ichidagi kamyoblik
   originalityBase String @default("sinf") // sinf | platforma
 
+  // AI/tizim qo'ygan asl baho. O'qituvchi tahriri BU USTUNLARGA TEGMAYDI —
+  // "AI bahosi va o'qituvchi bahosining mos kelishi" ko'rsatkichi shundan
+  // hisoblanadi (15-bo'lim). Eski yozuvlarda bo'lmasligi mumkin: null.
+  aiFluency     Int?
+  aiFlexibility Int?
+  aiOriginality Int?
+  aiElaboration Int?
+
   aiQuestion    String?
   aiRationale   String?
   safetyFlagged Boolean @default(false)
   safetyNote    String?
 
-  teacherEdited Boolean  @default(false)
+  teacherEdited Boolean   @default(false)
+  editedAt      DateTime?
   teacherNote   String?
   model         String?
   createdAt     DateTime @default(now())

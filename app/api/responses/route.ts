@@ -82,6 +82,11 @@ export async function POST(request: Request) {
       flexibility: flagged ? 0 : scores.flexibility,
       originality: flagged ? 0 : scores.originality,
       elaboration: flagged ? 0 : scores.elaboration,
+      // AI bahosining o'zgarmas nusxasi — o'qituvchi tahriri bunga tegmaydi
+      aiFluency: flagged ? 0 : scores.fluency,
+      aiFlexibility: flagged ? 0 : scores.flexibility,
+      aiOriginality: flagged ? 0 : scores.originality,
+      aiElaboration: flagged ? 0 : scores.elaboration,
       ideaCount: scores.ideaCount,
       categoryCount: scores.categoryCount,
       detailCount: scores.detailCount,
