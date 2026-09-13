@@ -139,9 +139,17 @@ export default async function StudentProfile({
               {calibration.elaboration.min}–{calibration.elaboration.max} tafsilot
             </p>
           </div>
-          <p className="text-sm text-[var(--ink-soft)]">
-            {stories.length} ta ertak · {scoredCount} ta baholangan javob
-          </p>
+          <div className="flex flex-wrap items-center gap-4">
+            <p className="text-sm text-[var(--ink-soft)]">
+              {stories.length} ta ertak · {scoredCount} ta baholangan javob
+            </p>
+            <Link
+              href={`/oqituvchi/oquvchi/${student.id}/hisobot`}
+              className="btn btn-quiet px-4 py-1.5 text-sm"
+            >
+              Ota-onaga hisobot
+            </Link>
+          </div>
         </header>
 
         {flaggedTotal > 0 && (

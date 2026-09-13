@@ -430,3 +430,32 @@ h3 {
     transform: none;
   }
 }
+
+/* Chop etish: hisobot varag'i qog'ozga toza tushsin */
+@media print {
+  @page {
+    margin: 16mm;
+  }
+
+  :root {
+    --bg: #fff;
+    --surface: #fff;
+    --surface-sunk: #f5f5f5;
+    --ink: #111;
+    --ink-soft: #444;
+    --line: #ccc;
+    --line-strong: #888;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  .card {
+    box-shadow: none;
+  }
+
+  a[href]::after {
+    content: "";
+  }
+}

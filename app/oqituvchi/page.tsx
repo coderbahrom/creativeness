@@ -68,10 +68,10 @@ export default async function TeacherHome() {
               ajratilgan holda ko&apos;rinadi.
             </p>
           </div>
-          <Link
-            href="/oqituvchi/moslik"
-            className="ml-auto btn btn-quiet px-4 py-1.5 text-sm"
-          >
+          <Link href="/oqituvchi/dars" className="ml-auto btn btn-primary px-4 py-1.5 text-sm">
+            Dars ekrani
+          </Link>
+          <Link href="/oqituvchi/moslik" className="btn btn-quiet px-4 py-1.5 text-sm">
             AI va pedagog mosligi
           </Link>
           <form action={logout}>
