@@ -47,7 +47,9 @@ async function main() {
     },
   });
 
-  // ESKI ko'rinish: har bir bo'lak javob alohida o'rtachaga kirgan
+  // ESKI ko'rinish: har bir bo'lak javob alohida o'rtachaga kirgan.
+  // Diqqat: skript bir marta yozgandan keyin bu solishtirish ma'nosini yo'qotadi —
+  // yakuniy baholar allaqachon yig'ma. Unda ozgaradiganYakuniyBaholar ga qarang.
   const oldByPair = new Map<string, Levels[]>();
   for (const r of responses) {
     if (!r.assessment || r.assessment.safetyFlagged) continue;
@@ -67,6 +69,7 @@ async function main() {
   const pools = new Map<string, Awaited<ReturnType<typeof loadTaskPool>>>();
   const newByPair = new Map<string, Levels[]>();
   let skippedReviewed = 0;
+  let willChange = 0;
 
   for (const group of groups.values()) {
     const { sessionId, taskId, session } = group[0];
@@ -82,6 +85,9 @@ async function main() {
       const scores = await scoreTask(sessionId, taskId, pools.get(taskId));
       if (!scores) continue;
       levels = scores;
+      // Yozish aslida nimani o'zgartiradi — saqlangan yakuniy baho bilan solishtirish
+      const stored = group.find((r) => r.assessment?.id === final.id)!.assessment!;
+      if (CRITERIA.some((c) => stored[c] !== scores[c])) willChange++;
     }
     const key = `${session.studentId}:${session.storyId}`;
     if (!newByPair.has(key)) newByPair.set(key, []);
@@ -108,6 +114,8 @@ async function main() {
     JSON.stringify(
       {
         rejim: dry ? "quruq (hech narsa yozilmadi)" : "yozildi",
+        // Asosiy ko'rsatkich: yozish nechta yakuniy bahoni o'zgartiradi (0 = allaqachon qo'llangan)
+        ozgaradiganYakuniyBaholar: willChange,
         ishlar: groups.size,
         bolakJavoblar: responses.length,
         koribChiqilganIshTegilmadi: skippedReviewed,
