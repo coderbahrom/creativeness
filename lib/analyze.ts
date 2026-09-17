@@ -158,7 +158,43 @@ export type AnalyzeInput = {
   taskCriterion: Criterion;
   answer: string;
   previousQuestions?: string[];
+  /**
+   * Shu topshiriq bo'yicha bola OLDIN yozganlari. Berilsa — bu javob o'sha
+   * ishning davomi (masalan Ertakchi savoliga javob), alohida javob emas.
+   */
+  thread?: {
+    earlierAnswers: string[];
+    question: string | null;
+    earlierIdeas: { key: string; text: string }[];
+  };
 };
+
+/**
+ * Davom javobi uchun kontekst. Maqsad: bola oldin aytgan g'oyani qayta aytsa
+ * yoki unga "chunki..." qo'shsa — bu YANGI g'oya bo'lib sanalmasin, balki
+ * o'sha g'oyaning tafsiloti bo'lsin. Buning uchun AI eski kalitni qaytaradi.
+ */
+function threadContext(thread: NonNullable<AnalyzeInput["thread"]>): string {
+  const earlier = thread.earlierAnswers.map((a) => `\"\"\"\n${a}\n\"\"\"`).join("\n");
+  const keys = thread.earlierIdeas.length
+    ? thread.earlierIdeas.map((i) => `- ${i.key} — ${i.text}`).join("\n")
+    : "(g'oya ajratilmagan)";
+  return [
+    "BU JAVOB — BOLANING SHU TOPSHIRIQDAGI OLDINGI ISHINING DAVOMI.",
+    `Bola oldin yozgan:\n${earlier}`,
+    thread.question ? `Keyin Ertakchi so'radi: "${thread.question}"` : "",
+    `Oldin ajratilgan g'oyalar (canonical_key — matn):\n${keys}`,
+    [
+      "DAVOM JAVOBI QOIDALARI:",
+      "- Bola oldingi g'oyani qayta aytsa yoki unga sabab, his, tasvir, dialog qo'shsa — bu YANGI g'oya EMAS.",
+      "  O'sha g'oyani AYNAN yuqoridagi canonical_key bilan qaytar; elaboration_count ga faqat YANGI qo'shilgan tafsilotlarni yoz.",
+      "- Ertakchi savoliga qisqa javob ham to'liq qiymatli: \"chunki u qo'rqdi\" — mavjud g'oyaga 1 tafsilot.",
+      "- Faqat haqiqatan yangi fikr yangi canonical_key oladi.",
+    ].join("\n"),
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+}
 
 export async function analyzeResponse(input: AnalyzeInput): Promise<Analysis> {
   const anthropic = getClient();
@@ -175,7 +211,8 @@ export async function analyzeResponse(input: AnalyzeInput): Promise<Analysis> {
     input.previousQuestions?.length
       ? `Shu sessiyada allaqachon berilgan savollar (takrorlama):\n- ${input.previousQuestions.join("\n- ")}`
       : "",
-    `Bolaning javobi:\n"""\n${input.answer}\n"""`,
+    input.thread ? threadContext(input.thread) : "",
+    `${input.thread ? "Bolaning DAVOM javobi" : "Bolaning javobi"}:\n"""\n${input.answer}\n"""`,
   ]
     .filter(Boolean)
     .join("\n\n");

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { logout } from "@/app/kirish/actions";
 import { AppHeader } from "@/components/AppHeader";
-import { CRITERIA, averageLevels, roundLevels } from "@/lib/analytics";
+import { CRITERIA, averageLevels, finalPerTask, roundLevels } from "@/lib/analytics";
 import { LevelChip } from "@/components/LevelChip";
 import { prisma } from "@/lib/db";
 import { CRITERION_SHORT } from "@/lib/torrance";
@@ -19,7 +19,9 @@ export default async function TeacherHome() {
             select: {
               startedAt: true,
               storyId: true,
-              responses: { select: { assessment: true } },
+              responses: {
+                select: { sessionId: true, taskId: true, createdAt: true, assessment: true },
+              },
             },
           },
         },
@@ -29,8 +31,8 @@ export default async function TeacherHome() {
 
   const cards = classrooms.map((classroom) => {
     const sessions = classroom.students.flatMap((s) => s.sessions);
-    const assessments = sessions
-      .flatMap((s) => s.responses.map((r) => r.assessment))
+    const assessments = finalPerTask(sessions.flatMap((s) => s.responses))
+      .map((r) => r.assessment)
       .filter(Boolean) as never[];
     const responseCount = sessions.reduce((sum, s) => sum + s.responses.length, 0);
     const flagged = sessions

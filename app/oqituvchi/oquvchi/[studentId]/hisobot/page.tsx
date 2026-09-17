@@ -4,6 +4,8 @@ import { LevelChip } from "@/components/LevelChip";
 import {
   CRITERIA,
   averageLevels,
+  finalPerTask,
+  groupByTask,
   roundLevels,
   scorable,
   totalLevel,
@@ -54,8 +56,8 @@ export default async function ReportPage({
   if (!student) notFound();
 
   const name = `${student.firstName} ${student.lastInitial}.`;
-  const assessments = student.sessions
-    .flatMap((s) => s.responses.map((r) => r.assessment))
+  const assessments = finalPerTask(student.sessions.flatMap((s) => s.responses))
+    .map((r) => r.assessment)
     .filter(Boolean) as never[];
   const overall = averageLevels(assessments);
   const rounded = roundLevels(overall);
@@ -65,7 +67,9 @@ export default async function ReportPage({
   const perStory = [...new Map(student.sessions.map((s) => [s.storyId, s])).keys()].map(
     (storyId) => {
       const sessions = student.sessions.filter((s) => s.storyId === storyId);
-      const a = sessions.flatMap((s) => s.responses.map((r) => r.assessment)).filter(Boolean);
+      const a = finalPerTask(sessions.flatMap((s) => s.responses))
+        .map((r) => r.assessment)
+        .filter(Boolean);
       return {
         title: sessions[0].story.title,
         at: sessions[0].startedAt,
@@ -78,9 +82,17 @@ export default async function ReportPage({
     perStory.map((s) => s.levels?.[criterion] ?? 0).filter((v) => v > 0);
 
   const best = student.sessions
-    .flatMap((s) => s.responses.map((r) => ({ response: r, storyTitle: s.story.title })))
-    .filter((x) => x.response.assessment && !x.response.assessment.safetyFlagged)
-    .sort((a, b) => totalLevel(b.response.assessment!) - totalLevel(a.response.assessment!))
+    .flatMap((s) =>
+      groupByTask(s.responses).map(({ items }) => ({
+        id: `${s.id}:${items[0].taskId}`,
+        storyTitle: s.story.title,
+        prompt: items[0].task.prompt,
+        parts: items.filter((r) => !r.assessment?.safetyFlagged).map((r) => r.rawText),
+        assessment: finalPerTask(items)[0]?.assessment ?? null,
+      })),
+    )
+    .filter((x) => x.assessment && !x.assessment.safetyFlagged)
+    .sort((a, b) => totalLevel(b.assessment!) - totalLevel(a.assessment!))
     .slice(0, 3);
 
   const notes = student.sessions
@@ -122,7 +134,7 @@ export default async function ReportPage({
         <h2 className="text-lg font-extrabold">Bola nima qildi</h2>
         <p className="mt-2 text-[var(--ink-soft)]">
           {perStory.length} ta ertakni o&apos;qib, ularni o&apos;zicha davom ettirdi.{" "}
-          {scoredCount} ta kreativ javob berdi. Har bir javob to&apos;rt mezon bo&apos;yicha
+          {scoredCount} ta kreativ topshiriqni bajardi. Har bir javob to&apos;rt mezon bo&apos;yicha
           baholandi: qancha g&apos;oya topgani, g&apos;oyalari qanchalik xilma-xil ekani,
           qanchalik o&apos;ziga xos ekani va qanchalik batafsil o&apos;ylaganligi.
         </p>
@@ -215,12 +227,16 @@ export default async function ReportPage({
         <section className="mt-7">
           <h2 className="text-lg font-extrabold">Eng yaxshi javoblari</h2>
           <ul className="mt-3 space-y-4">
-            {best.map(({ response, storyTitle }) => (
-              <li key={response.id} className="break-inside-avoid">
+            {best.map((item) => (
+              <li key={item.id} className="break-inside-avoid">
                 <p className="text-sm font-bold text-[var(--ink-soft)]">
-                  {storyTitle} · {response.task.prompt}
+                  {item.storyTitle} · {item.prompt}
                 </p>
-                <p className="story-text mt-1">{response.rawText}</p>
+                <div className="story-text mt-1 space-y-1">
+                  {item.parts.map((text, i) => (
+                    <p key={i}>{text}</p>
+                  ))}
+                </div>
               </li>
             ))}
           </ul>

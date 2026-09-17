@@ -7,6 +7,8 @@ import { LevelChip } from "@/components/LevelChip";
 import {
   CRITERIA,
   averageLevels,
+  finalPerTask,
+  groupByTask,
   roundLevels,
   scorable,
   totalLevel,
@@ -82,17 +84,20 @@ export default async function StudentProfile({
 
   // Har bir ertak uchun o'rtacha daraja
   for (const group of byStory.values()) {
-    const assessments = student.sessions
+    const responses = student.sessions
       .filter((s) => s.storyId === group.storyId)
-      .flatMap((s) => s.responses.map((r) => r.assessment));
-    group.levels = roundLevels(averageLevels(assessments.filter(Boolean) as never[]));
+      .flatMap((s) => s.responses);
+    group.levels = roundLevels(
+      averageLevels(finalPerTask(responses).map((r) => r.assessment).filter(Boolean) as never[]),
+    );
   }
 
   const stories = [...byStory.values()].sort((a, b) => b.lastAt.getTime() - a.lastAt.getTime());
 
-  const allAssessments = student.sessions
-    .flatMap((s) => s.responses.map((r) => r.assessment))
-    .filter(Boolean) as never[];
+  const allResponses = student.sessions.flatMap((s) => s.responses);
+  // Baholash birligi — ish: Ertakchiga javoblar o'sha ishning ichida
+  const finals = finalPerTask(allResponses);
+  const allAssessments = finals.map((r) => r.assessment).filter(Boolean) as never[];
   const overall = averageLevels(allAssessments);
   const overallRounded = roundLevels(overall);
   const scoredCount = scorable(allAssessments).length;
@@ -107,12 +112,22 @@ export default async function StudentProfile({
   const seriesFor = (criterion: (typeof CRITERIA)[number]) =>
     chronological.map((g) => g.levels?.[criterion] ?? 0).filter((v) => v > 0);
 
+  // Eng yaxshi 3 ish — butun matni bilan (asosiy javob + Ertakchiga javoblar)
   const best = student.sessions
     .flatMap((s) =>
-      s.responses.map((r) => ({ response: r, storyTitle: s.story.title, storyId: s.storyId })),
+      groupByTask(s.responses).map(({ items }) => {
+        const final = finalPerTask(items)[0];
+        return {
+          id: `${s.id}:${items[0].taskId}`,
+          storyTitle: s.story.title,
+          prompt: items[0].task.prompt,
+          parts: items.filter((r) => !r.assessment?.safetyFlagged).map((r) => r.rawText),
+          assessment: final?.assessment ?? null,
+        };
+      }),
     )
-    .filter((x) => x.response.assessment && !x.response.assessment.safetyFlagged)
-    .sort((a, b) => totalLevel(b.response.assessment!) - totalLevel(a.response.assessment!))
+    .filter((x) => x.assessment && !x.assessment.safetyFlagged)
+    .sort((a, b) => totalLevel(b.assessment!) - totalLevel(a.assessment!))
     .slice(0, 3);
 
   const calibration = CALIBRATION[clampGrade(student.classroom.grade)];
@@ -141,7 +156,7 @@ export default async function StudentProfile({
           </div>
           <div className="flex flex-wrap items-center gap-4">
             <p className="text-sm text-[var(--ink-soft)]">
-              {stories.length} ta ertak · {scoredCount} ta baholangan javob
+              {stories.length} ta ertak · {scoredCount} ta baholangan ish
             </p>
             <Link
               href={`/oqituvchi/oquvchi/${student.id}/hisobot`}
@@ -243,12 +258,16 @@ export default async function StudentProfile({
             <h2 className="text-xl font-extrabold">Eng yaxshi javoblari</h2>
             <p className="mt-1 text-[var(--ink-soft)]">Ota-onaga ko&apos;rsatish uchun.</p>
             <ul className="mt-4 space-y-3">
-              {best.map(({ response, storyTitle }) => (
-                <li key={response.id} className="card p-5">
+              {best.map((item) => (
+                <li key={item.id} className="card p-5">
                   <p className="text-sm font-bold text-[var(--ink-soft)]">
-                    {storyTitle} · {response.task.prompt}
+                    {item.storyTitle} · {item.prompt}
                   </p>
-                  <p className="story-text mt-2">{response.rawText}</p>
+                  <div className="story-text mt-2 space-y-2">
+                    {item.parts.map((text, i) => (
+                      <p key={i}>{text}</p>
+                    ))}
+                  </div>
                 </li>
               ))}
             </ul>

@@ -73,3 +73,61 @@ export const TREND_LABEL: Record<Trend, string> = {
   flat: "barqaror",
   unknown: "ma'lumot yetarli emas",
 };
+
+type FinalCandidate = {
+  sessionId: string;
+  taskId: string;
+  createdAt: Date;
+  assessment: {
+    safetyFlagged: boolean;
+    teacherEdited: boolean;
+    editedAt: Date | null;
+  } | null;
+};
+
+/**
+ * Har bir ish (sessiya × topshiriq) uchun bitta yakuniy javob.
+ *
+ * Baholash birligi — ish, bo'lak javob emas: Ertakchi savoliga javob va qayta
+ * urinishlar o'sha ishning davomi. Yakuniy baho ishning hamma yozganlarini
+ * o'z ichiga oladi, shuning uchun o'rtachaga FAQAT u kiradi.
+ *
+ * Tanlov: o'qituvchi ko'rib chiqqan baho ustun; aks holda eng oxirgi
+ * belgilanmagan javob. (lib/scoring.ts dagi finalAssessmentId bilan bir xil qoida.)
+ */
+export function finalPerTask<R extends FinalCandidate>(responses: R[]): R[] {
+  const groups = new Map<string, R[]>();
+  for (const r of responses) {
+    const key = `${r.sessionId}:${r.taskId}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(r);
+  }
+
+  const finals: R[] = [];
+  for (const group of groups.values()) {
+    const assessed = group
+      .filter((r) => r.assessment)
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    const pick =
+      assessed.find((r) => r.assessment!.teacherEdited || r.assessment!.editedAt) ??
+      assessed.find((r) => !r.assessment!.safetyFlagged);
+    if (pick) finals.push(pick);
+  }
+  return finals;
+}
+
+/** Ish bo'yicha guruhlash — ko'rsatish uchun (javob, Ertakchi savoli, davomi) */
+export function groupByTask<R extends { taskId: string; createdAt: Date }>(
+  responses: R[],
+): { taskId: string; items: R[] }[] {
+  const order: string[] = [];
+  const map = new Map<string, R[]>();
+  for (const r of [...responses].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())) {
+    if (!map.has(r.taskId)) {
+      map.set(r.taskId, []);
+      order.push(r.taskId);
+    }
+    map.get(r.taskId)!.push(r);
+  }
+  return order.map((taskId) => ({ taskId, items: map.get(taskId)! }));
+}

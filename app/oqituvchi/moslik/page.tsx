@@ -1,6 +1,6 @@
 import { AppHeader } from "@/components/AppHeader";
 import { Breadcrumb } from "@/components/Breadcrumb";
-import { CRITERIA } from "@/lib/analytics";
+import { CRITERIA, finalPerTask } from "@/lib/analytics";
 import { prisma } from "@/lib/db";
 import { CRITERION_LABELS } from "@/lib/torrance";
 
@@ -14,21 +14,33 @@ export const dynamic = "force-dynamic";
  * ko'rsatadi — baza kichik bo'lsa, foiz ishonchsiz.
  */
 export default async function AgreementPage() {
-  const assessments = await prisma.assessment.findMany({
-    where: { safetyFlagged: false, aiFluency: { not: null } },
+  // Faqat har bir ishning yakuniy bahosi — o'qituvchi aynan shuni ko'radi va tahrirlaydi
+  const responses = await prisma.response.findMany({
     select: {
-      fluency: true,
-      flexibility: true,
-      originality: true,
-      elaboration: true,
-      aiFluency: true,
-      aiFlexibility: true,
-      aiOriginality: true,
-      aiElaboration: true,
-      editedAt: true,
-      model: true,
+      sessionId: true,
+      taskId: true,
+      createdAt: true,
+      assessment: {
+        select: {
+          fluency: true,
+          flexibility: true,
+          originality: true,
+          elaboration: true,
+          aiFluency: true,
+          aiFlexibility: true,
+          aiOriginality: true,
+          aiElaboration: true,
+          editedAt: true,
+          teacherEdited: true,
+          safetyFlagged: true,
+          model: true,
+        },
+      },
     },
   });
+  const assessments = finalPerTask(responses)
+    .map((r) => r.assessment!)
+    .filter((a) => !a.safetyFlagged && a.aiFluency !== null);
 
   const reviewed = assessments.filter((a) => a.editedAt !== null);
 
@@ -92,7 +104,7 @@ export default async function AgreementPage() {
               </p>
             </div>
             <p className="text-[var(--ink-soft)]">
-              {reviewed.length} ta ko&apos;rib chiqilgan javob ({assessments.length} tadan)
+              {reviewed.length} ta ko&apos;rib chiqilgan ish ({assessments.length} tadan)
             </p>
           </div>
 

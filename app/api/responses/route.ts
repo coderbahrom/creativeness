@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { analyzeResponse } from "@/lib/analyze";
 import { prisma } from "@/lib/db";
-import { recomputeTaskOriginality, scoreResponse } from "@/lib/scoring";
+import { recomputeTaskScores, scoreTask } from "@/lib/scoring";
 import { buildTree } from "@/lib/tree";
 import type { Criterion } from "@/lib/torrance";
 
@@ -26,7 +26,10 @@ export async function POST(request: Request) {
     include: {
       student: { include: { classroom: true } },
       story: true,
-      responses: { include: { assessment: true } },
+      responses: {
+        orderBy: { createdAt: "asc" },
+        include: { assessment: true, ideas: { orderBy: { order: "asc" } } },
+      },
     },
   });
   if (!session) return NextResponse.json({ error: "Sessiya topilmadi" }, { status: 404 });
@@ -38,6 +41,13 @@ export async function POST(request: Request) {
     .map((r) => r.assessment?.aiQuestion)
     .filter((q): q is string => Boolean(q));
 
+  // Shu topshiriqqa bola oldin yozganlari — bu javob o'sha ishning davomi
+  const earlier = session.responses.filter(
+    (r) => r.taskId === task.id && !r.assessment?.safetyFlagged,
+  );
+  const lastQuestion =
+    [...earlier].reverse().find((r) => r.assessment?.aiQuestion)?.assessment?.aiQuestion ?? null;
+
   const analysis = await analyzeResponse({
     grade: session.student.classroom.grade,
     storyTitle: session.story.title,
@@ -46,6 +56,17 @@ export async function POST(request: Request) {
     taskCriterion: task.criterion as Criterion,
     answer: body.text.trim(),
     previousQuestions: askedQuestions,
+    thread: earlier.length
+      ? {
+          earlierAnswers: earlier.map((r) => r.rawText),
+          question: body.followUpOf ? lastQuestion : null,
+          earlierIdeas: [
+            ...new Map(
+              earlier.flatMap((r) => r.ideas).map((i) => [i.canonicalKey, { key: i.canonicalKey, text: i.text }]),
+            ).values(),
+          ],
+        }
+      : undefined,
   });
 
   const response = await prisma.response.create({
@@ -69,7 +90,9 @@ export async function POST(request: Request) {
     },
   });
 
-  const scores = await scoreResponse(response.id);
+  // Baho — butun ish bo'yicha (shu topshiriqdagi hamma yozganlar), faqat shu bo'lak emas
+  const scores = await scoreTask(session.id, task.id);
+  if (!scores) throw new Error("Ish topilmadi");
 
   // Xavfsizlik filtri ishga tushsa: ball ham, AI savoli ham berilmaydi (7.4-bo'lim).
   const flagged = analysis.safety.flagged;
@@ -101,7 +124,7 @@ export async function POST(request: Request) {
   });
 
   // Yangi javob kelishi bilan sinf ichidagi kamyoblik ulushlari siljiydi.
-  await recomputeTaskOriginality(task.id);
+  await recomputeTaskScores(task.id);
 
   const tree = await buildTree(session.id);
 

@@ -1,5 +1,5 @@
 import { prisma } from "./db";
-import { computeRarity } from "./scoring";
+import { loadTaskPool, mergeIdeas, rarityFor } from "./scoring";
 import type { IdeaCategory } from "./torrance";
 
 /**
@@ -8,6 +8,10 @@ import type { IdeaCategory } from "./torrance";
  *   Shox rangi      → Moslashuvchanlik (g'oya toifasi)
  *   Gul             → Originallik      (sinfda kam uchragan g'oya)
  *   Barg / meva     → Batafsillik      (tafsilot birligi)
+ *
+ * Daraxt baho bilan bir xil birlikda quriladi: bitta topshiriq ichida bola
+ * g'oyani qayta aytsa yoki Ertakchi savoliga javobda unga tafsilot qo'shsa —
+ * yangi shox chiqmaydi, mavjud shoxga barg qo'shiladi.
  *
  * Daraxt hech qachon qurimaydi va yaproq to'kmaydi — salbiy fidbek vizual jazo
  * shaklida berilmaydi.
@@ -37,20 +41,38 @@ export async function buildTree(sessionId: string): Promise<TreeState> {
   const responses = await prisma.response.findMany({
     where: { sessionId },
     orderBy: { createdAt: "asc" },
-    include: { ideas: { orderBy: { order: "asc" } } },
+    select: {
+      id: true,
+      taskId: true,
+      studentId: true,
+      createdAt: true,
+      assessment: { select: { safetyFlagged: true } },
+      ideas: {
+        orderBy: { order: "asc" },
+        select: { canonicalKey: true, text: true, category: true, elaborationCount: true },
+      },
+    },
   });
 
+  // Topshiriqlar javob berilgan tartibda
+  const taskOrder = [...new Set(responses.map((r) => r.taskId))];
   const branches: TreeBranch[] = [];
-  for (const response of responses) {
-    if (!response.ideas.length) continue;
-    const { perIdea } = await computeRarity(response.id);
+
+  for (const taskId of taskOrder) {
+    const group = responses.filter((r) => r.taskId === taskId);
+    const ideas = mergeIdeas(group);
+    if (!ideas.length) continue;
+
+    const { perIdea } = rarityFor(await loadTaskPool(taskId), group[0].studentId, ideas);
     const rarityByKey = new Map(perIdea.map((i) => [i.key, i.rarity]));
-    for (const idea of response.ideas) {
+
+    for (const idea of ideas) {
       branches.push({
-        id: idea.id,
+        // Kalit barqaror: davom javobi kelganda shox qayta "o'smaydi", faqat barg qo'shiladi
+        id: `${taskId}:${idea.key}`,
         category: idea.category as IdeaCategory,
-        flower: (rarityByKey.get(idea.canonicalKey) ?? 0) >= FLOWER_RARITY_THRESHOLD,
-        leaves: idea.elaborationCount,
+        flower: (rarityByKey.get(idea.key) ?? 0) >= FLOWER_RARITY_THRESHOLD,
+        leaves: idea.elaboration,
       });
     }
   }

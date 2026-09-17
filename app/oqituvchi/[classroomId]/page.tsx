@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { AppHeader } from "@/components/AppHeader";
 import { Breadcrumb } from "@/components/Breadcrumb";
 import { LevelChip } from "@/components/LevelChip";
-import { CRITERIA, averageLevels, roundLevels, type Levels } from "@/lib/analytics";
+import { CRITERIA, averageLevels, finalPerTask, roundLevels, type Levels } from "@/lib/analytics";
 import { prisma } from "@/lib/db";
 import { CALIBRATION, CRITERION_HINTS, CRITERION_LABELS, clampGrade } from "@/lib/torrance";
 
@@ -67,7 +67,10 @@ export default async function ClassroomMap({
       ? student.sessions.filter((s) => s.storyId === activeStory.id)
       : student.sessions;
     const responses = sessions.flatMap((s) => s.responses);
-    const assessments = responses.map((r) => r.assessment).filter(Boolean) as never[];
+    // Har bir ishdan faqat yakuniy baho (Ertakchiga javoblar o'sha ishning ichida)
+    const assessments = finalPerTask(responses)
+      .map((r) => r.assessment)
+      .filter(Boolean) as never[];
 
     return {
       id: student.id,
@@ -81,12 +84,14 @@ export default async function ClassroomMap({
 
   const active = rows.filter((row) => row.levels);
   const classAvg = averageLevels(
-    classroom.students
-      .flatMap((s) =>
+    finalPerTask(
+      classroom.students.flatMap((s) =>
         (activeStory ? s.sessions.filter((x) => x.storyId === activeStory.id) : s.sessions).flatMap(
-          (x) => x.responses.map((r) => r.assessment),
+          (x) => x.responses,
         ),
-      )
+      ),
+    )
+      .map((r) => r.assessment)
       .filter(Boolean) as never[],
   );
 
