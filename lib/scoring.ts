@@ -52,6 +52,20 @@ export type ResponseScores = {
   originalityBase: RarityBase;
 };
 
+/**
+ * G'oyalarni solishtirish kaliti. Bolalar va AI tutuq belgisini har xil yozadi
+ * ("ko'raman" / "koraman" / "koʻraman") — bu bir xil g'oya, ikki marta
+ * sanalmasligi kerak. Ko'p so'zli iborada bu birlashtirish ma'no aralashtirmaydi.
+ */
+export function mergeKey(key: string): string {
+  return key
+    .toLocaleLowerCase("uz")
+    .replace(/[`'’‘ʻʼ´]/g, "")
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 type GroupResponse = {
   id: string;
   createdAt: Date;
@@ -69,12 +83,13 @@ export function mergeIdeas(responses: GroupResponse[]): MergedIdea[] {
   for (const response of ordered) {
     if (response.assessment?.safetyFlagged) continue;
     for (const idea of response.ideas) {
-      const existing = byKey.get(idea.canonicalKey);
+      const key = mergeKey(idea.canonicalKey);
+      const existing = byKey.get(key);
       if (existing) {
         existing.elaboration += idea.elaborationCount;
       } else {
-        byKey.set(idea.canonicalKey, {
-          key: idea.canonicalKey,
+        byKey.set(key, {
+          key,
           text: idea.text,
           category: idea.category,
           elaboration: idea.elaborationCount,
@@ -108,7 +123,7 @@ export async function loadTaskPool(taskId: string): Promise<TaskPool> {
     classroomOf.set(r.studentId, r.student.classroomId);
     if (!keysByStudent.has(r.studentId)) keysByStudent.set(r.studentId, new Set());
     if (r.assessment?.safetyFlagged) continue;
-    for (const idea of r.ideas) keysByStudent.get(r.studentId)!.add(idea.canonicalKey);
+    for (const idea of r.ideas) keysByStudent.get(r.studentId)!.add(mergeKey(idea.canonicalKey));
   }
   return { classroomOf, keysByStudent };
 }
